@@ -140,22 +140,29 @@ Requires Python 3.12 or newer (tested on 3.13). From the repository root:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt            # pinned versions, installs this package too
-python scripts/download_data.py            # one text file (~2 MB) from the Met Office
-pytest -q                                  # 65 tests, about 10 s
-python scripts/reproduce.py                # about 1 minute; rewrites results/ and the Results block above
-python scripts/mutation_check.py           # optional, about 2 minutes: 14 injected bugs, each must fail the tests
+pip install -r requirements.txt
+python scripts/download_data.py
+pytest -q
+python scripts/reproduce.py
 ```
 
-If the download fails (for example a certificate error), open the data URL in a browser, save the page as a `.txt` file and run `python scripts/download_data.py --file /path/to/file.txt`.
+1. `pip install -r requirements.txt` installs pinned versions and this package.
+2. `download_data.py` fetches one text file (about 2 MB) from the Met Office and records its provenance. If it fails (for example with a certificate error), open the data URL in a browser, save the page as a `.txt` file and run `python scripts/download_data.py --file /path/to/file.txt`.
+3. `pytest -q` runs 65 tests in about 10 seconds.
+4. `reproduce.py` takes under a minute and rewrites `results/` and the Results block above.
 
-`python scripts/reproduce.py --synthetic` runs the whole pipeline on synthetic data into `results-synthetic/` without touching this README; it is a smoke test, not a result.
+Optional: `python scripts/mutation_check.py` (about 2 minutes) injects 14 known bugs and checks that the tests catch each one. `python scripts/reproduce.py --synthetic` runs the whole pipeline on synthetic data into `results-synthetic/` without touching this README; it is a smoke test, not a result.
 
-The pre-registered forecast for December 2026 to March 2027 (D19):
+The pre-registered forecast for December 2026 to March 2027 (D19) is made, and committed before 1 December 2026, with:
 
 ```bash
-python scripts/forecast.py make --season-start 2026-12-01 --season-end 2027-03-31   # commit the output before 1 Dec 2026
-python scripts/forecast.py score forecasts/2026-27_1201-0331.json                   # after March 2027 data are published
+python scripts/forecast.py make --season-start 2026-12-01 --season-end 2027-03-31
+```
+
+After the March 2027 data are published, it is scored with:
+
+```bash
+python scripts/forecast.py score forecasts/2026-27_1201-0331.json
 ```
 
 ## Project structure
