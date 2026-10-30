@@ -1,0 +1,31 @@
+# Pinned for reproducibility (Python 3.12 or newer; tested on 3.13).
+# One command installs everything, including this package in editable mode:
+#   pip install -r requirements.txt
+numpy==2.5.4
+scipy==1.18.1
+pandas==3.0.6
+statsmodels==0.15.0
+matplotlib==3.11.2
+pytest==9.1.1
+certifi==2026.10.23
+# Transitive dependencies
+contourpy==1.4.0
+cycler==0.12.1
+fonttools==4.68.0
+formulaic==1.2.2
+iniconfig==2.3.1
+interface_meta==2.0.1
+kiwisolver==1.5.1
+narwhals==2.28.0
+packaging==26.3
+patsy==1.0.3
+pillow==13.0.0
+pluggy==1.7.0
+Pygments==2.21.0
+pyparsing==3.3.3
+python-dateutil==3.0.0
+six==1.17.0
+typing_extensions==4.16.0
+tzdata==2026.6
+wrapt==2.5.2
+-e .

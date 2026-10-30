@@ -1,0 +1,64 @@
+# Every modelling and evaluation parameter lives here. Code reads nothing else.
+# Paths are relative to the repository root.
+
+[data]
+url = "https://www.metoffice.gov.uk/hadobs/hadcet/data/meantemp_daily_totals.txt"
+raw_path = "data/raw/meantemp_daily_totals.txt"
+meta_path = "data/raw/download_meta.json"
+dataset_version = "HadCET v2.1.1.0 + provisional (2026 onwards)"
+# First day used for any estimation (decision D7). Earlier data are ignored.
+start_date = "1900-11-01"
+# Values from this date on are provisional in the downloaded file (Met Office download page).
+provisional_from = "2026-01-01"
+# Last date the evaluation needs; the reported data hash covers 1900-11-01 to this date.
+evaluation_end = "2026-03-31"
+
+[contract]
+# Hypothetical contract (decision D2). No exchange lists it.
+base_temp = 18.0
+season_start = [11, 1]   # [month, day] in year y
+season_end = [3, 31]     # [month, day] in year y + 1
+tick_gbp = 20.0
+# Strikes for season y: mean and sd of the raw totals of the previous N seasons (decision D9).
+strike_reference_seasons = 30
+strike_sd_multiples = [-1.0, 0.0, 1.0]
+# Used only to show a present value in forecasts; every evaluation is undiscounted (decision D10).
+# Placeholder assumption, not a market rate: set it to the current sterling rate before quoting a PV.
+discount_rate = 0.04
+# Risk loading: price = E[payoff] + alpha * sd[payoff] (decision D11).
+loadings = [0.0, 0.1, 0.25]
+
+[evaluation]
+# Seasons are labelled by the year they start (season 1950 = Nov 1950 to Mar 1951).
+dev_first = 1950
+dev_last = 2005
+holdout_first = 2006
+holdout_last = 2025
+newey_west_lags = 3
+intervals = [0.5, 0.8, 0.9]
+# Baseline: naive burn, the industry starting point.
+baseline = "burn|trend=none|window=30"
+
+[burn]
+windows = [30, 50]
+trends = ["none", "linear"]
+
+[index]
+windows = [30, 50]
+trends = ["none", "linear"]
+
+[daily]
+windows = [30, 50]          # years of daily data before the pricing date
+harmonics = [2, 3]          # Fourier harmonics in the seasonal mean
+ar_orders = [1, 3]
+vol = ["constant", "seasonal"]
+vol_harmonics = 2
+n_paths = 10000
+seed = 20261029
+acf_lags = 5
+
+[robustness]
+base_temps = [15.5]
+
+[forecast]
+output_dir = "forecasts"

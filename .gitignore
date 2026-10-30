@@ -1,0 +1,9 @@
+# Data are downloaded by scripts/download_data.py and never committed.
+data/
+# Smoke-run output on synthetic data.
+results-synthetic/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.venv/
+.DS_Store
