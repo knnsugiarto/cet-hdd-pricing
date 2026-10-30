@@ -43,6 +43,13 @@ Share of each method's total squared ATM-call pricing error from the two most ex
 Full tables, all variants, robustness checks and diagnostics: [`results/summary.md`](results/summary.md).
 <!-- results:end -->
 
+**What the first run shows** (30 October 2026; the block above is regenerated on every run, these notes are not):
+
+- **Detrending matters most.** The undetrended baseline expected too many degree days on the holdout, as predicted (P1), and so overpriced calls and underpriced puts. Both methods with a linear trend were close to unbiased.
+- **The most elaborate model was the worst calibrated.** The daily temperature model's mean forecasts were competitive, but its spread was too narrow (P2): its 90% intervals missed far more than 10% of development winters, and it priced the at-the-money call at about half what the burn and index methods did. Short-memory dynamics understate how much whole winters vary. Adding AR(3) lags removed the residual autocorrelation in the daily fit but made the season-level calibration worse.
+- **Twenty winters cannot rank the rest.** The index model with a linear trend was the best calibrated. But on the holdout no frozen method beats the baseline's CRPS significantly, and no pair of methods differs significantly in at-the-money pricing accuracy (P3), as the power calculation predicted.
+- **One planned robustness check tested nothing.** CET daily means almost never reach 15.5 °C between November and March, so the 15.5 °C index is the 18 °C index minus a constant and gives the same scores (D25).
+
 ## The problem and why it matters
 
 Gas and power demand rise when winters are cold, so utilities, energy retailers and their insurers hedge with degree-day contracts that pay on accumulated cold. The index here is
@@ -97,7 +104,7 @@ $$T_t = s(t) + X_t, \qquad X_t = \sum_{i=1}^{p} \phi_i X_{t-i} + \sigma(t)\,\var
 
 where $s(t)$ is a linear trend plus 2 or 3 annual Fourier harmonics, and with $p = 1$ the anomaly $X_t$ is the daily discretisation of an Ornstein–Uhlenbeck process, $\phi = e^{-\kappa}$. Everything is fitted by least squares on the 30 or 50 years before the pricing date. The simulation starts from the last observed anomalies on 31 October and uses 10,000 paths. The code is in `src/hddlab/daily_model.py`.
 
-**The cross-check (D14).** Because $X$ is a linear Gaussian process, the linear index $L = \sum (18 - T_t)$ is exactly Gaussian, and its mean and variance follow from propagating the state's mean and covariance through the season. A call on $L$ therefore has an exact Bachelier price, and $E[H]$ is exact as a sum of per-day Gaussian expectations. The Monte Carlo must match both within its standard error, season by season. $H$ itself is not exactly Gaussian, because $H = L + \sum \max(T_t - 18, 0) \ge L$; the size of that gap is reported rather than hidden.
+**The cross-check (D14).** Because $X$ is a linear Gaussian process, the linear index $L = \sum (18 - T_t)$ is exactly Gaussian, and its mean and variance follow from propagating the state's mean and covariance through the season. A call on $L$ therefore has an exact Bachelier price, and $E[H]$ is exact as a sum of per-day Gaussian expectations. The Monte Carlo must match both within its standard error, season by season. $H$ itself is not exactly Gaussian, because $H = L + \sum \max(T_t - 18, 0) \ge L$; the size of that gap is reported rather than hidden. On CET it is negligible, because no daily mean since 1900 has reached 18 °C between November and March.
 
 **Variants.** 24 in total: burn and index each with trend {none, linear} × window {30, 50}; the daily model with AR order {1, 3} × harmonics {2, 3} × volatility {constant, seasonal} × window {30, 50} (D13, D23). Every variant is reported.
 
@@ -112,7 +119,7 @@ where $s(t)$ is a linear trend plus 2 or 3 annual Fourier harmonics, and with $p
   - P1: undetrended burn overestimates $E[H]$ in recent decades;
   - P2: the daily model's intervals are too narrow, because short-memory models understate year-to-year variability ([Caballero, Jewson and Brix, 2002](https://doi.org/10.3354/cr021127));
   - P3: on 20 holdout seasons, no pair of methods differs significantly in at-the-money pricing accuracy.
-- **Robustness:** base temperature 15.5 °C; estimation window and trend form (in the variant grid); the best variant in each half of the development period; risk loading.
+- **Robustness:** estimation window and trend form (in the variant grid); the best variant in each half of the development period; risk loading; base temperature 15.5 °C, which turned out to be uninformative on CET (D25).
 - **Error analysis:** the most extreme holdout winters, what each method expected and how much of each method's squared pricing error they account for (in the results block and `results/summary.md`).
 - **Benchmarks:** the naive burn baseline, and the exact closed forms for the Monte Carlo.
 
@@ -135,7 +142,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt            # pinned versions, installs this package too
 python scripts/download_data.py            # one text file (~2 MB) from the Met Office
-pytest -q                                  # 64 tests, about 10 s
+pytest -q                                  # 65 tests, about 10 s
 python scripts/reproduce.py                # about 1 minute; rewrites results/ and the Results block above
 python scripts/mutation_check.py           # optional, about 2 minutes: 14 injected bugs, each must fail the tests
 ```
@@ -171,7 +178,7 @@ src/hddlab/
   diagnostics.py              warm-day counts, residual checks
   pipeline.py, report.py, figures.py   orchestration and output
   synthetic.py                CET-like synthetic data for tests and the smoke run
-tests/                        64 tests: hand-computed HDD, leap seasons, closed forms vs integration,
+tests/                        65 tests: hand-computed HDD, leap seasons, closed forms vs integration,
                               simulator vs analytic OU moments, Monte Carlo vs exact, no look-ahead
 results/                      generated: summary.md, metrics.json, per-season CSVs, figures, frozen.json
 forecasts/                    pre-registered forecasts (committed before each season starts)
@@ -186,6 +193,7 @@ docs/defence.md               interview defence sheet
 - **Small samples.** 20 holdout winters cannot separate methods whose prices differ by less than most of an option's value (see the minimum detectable effects). One or two extreme winters can dominate the holdout.
 - **Look-ahead that tests cannot catch.** The data are today's homogenised version, not what was available at each pricing date, and anyone who follows the weather knows recent winters were mild. The defences are the pre-registered rules, the frozen split and the forecast committed before its season.
 - **The 1973 construction change** inside the estimation windows.
+- **Pre-registration evidence.** The design and predictions were committed locally before the first real-data run but pushed to GitHub afterwards, so their timing rests on local git timestamps (D24). The forecast for December 2026 to March 2027 is the publicly timestamped test.
 - **Zero market price of risk.** Real weather prices include a risk premium, and real contracts usually cap payouts; neither is modelled. The risk loading is only a sensitivity.
 - **No weather forecasts.** Close to and during a season, desks use meteorological forecasts; this study prices from climatology alone.
 - **What would break this:** a sudden climate regime change, which breaks both burn and trend extrapolation; a revision of the HadCET series; hedging a specific station or city, where CET's basis risk dominates; or reading these expected payoffs as tradable prices.

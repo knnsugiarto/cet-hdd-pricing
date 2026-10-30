@@ -142,3 +142,24 @@ Written before any real-data run. The verdicts in the README are computed by `hd
 
 - **Chose:** 24 variants (8 burn/index, 16 daily), each also evaluated at 15.5 °C for robustness only. Every variant appears in `results/summary.md`; none is hidden.
 - **Why:** with 24 variants, the best development score is optimistic by construction. That is why the holdout uses only frozen variants.
+
+---
+
+Entries below were written **after** the first real-data run (30 Oct 2026, 00:56 UTC, commit `f1ad500`). None changes a modelling choice or the frozen variants.
+
+## D24 — Recording the code version correctly; when the design was published (30 Oct 2026)
+
+- **What happened:** the first run logged its commit as `f1ad500+dirty`. The "dirty" flag came from the run's own output: `results/frozen.json` was written, untracked, before the code checked `git status`. The results commit `55b62a7` adds only files under `results/` and the generated README block on top of `f1ad500`, so the code that ran is exactly `f1ad500`. Re-running the study from the downloaded file on a second machine (Linux) matched every number in `results/metrics.json` to one part in a billion.
+- **Chose:** record the git state before the run writes anything, and ignore `results/` when deciding "dirty". A test covers both cases.
+- **Also recorded:** the design commit (`f1ad500`, 00:55:40 UTC) precedes the data download (00:55:46) and the run (00:56), but it was pushed to GitHub only after the run. The order rests on local git timestamps, which can be forged, so it is weaker evidence than a public push. The December 2026 to March 2027 forecast (D19) must be pushed before 1 December to give a public timestamp.
+
+## D25 — The 15.5 °C robustness check is uninformative on CET (30 Oct 2026)
+
+- **Finding:** no CET daily mean reached 18 °C in any November to March from 1900/01 to 2025/26, and only one day reached 15.5 °C. When T stays below the base, max(b − T, 0) = b − T, so the 15.5 °C index is the 18 °C index minus 2.5 °C × season length, a constant (apart from that one November day). The scores and pricing errors are essentially unchanged, and the truncation gap of D14 is negligible at either base.
+- **Chose:** keep the check (it was pre-declared) and say plainly that it tests nothing here. D2's claim that the lower base "stresses the Gaussian approximation" holds in general but not for this series.
+- **Alternative not taken:** add a new robustness check after seeing the results. That would be a post-hoc choice; if one is added later, it gets its own dated entry and is labelled exploratory.
+
+## D26 — Monte Carlo z-scores averaged −0.20 (30 Oct 2026)
+
+- **Finding:** over 76 seasons, the frozen daily variant's Monte Carlo minus Bachelier z-scores had mean −0.20 (standard error about 0.11). Re-running with five other seeds gave means of +0.10, +0.05, +0.12, −0.19 and +0.03.
+- **Conclusion:** chance, not bias. Every run before this check used the same seed, so the same draws produced the same −0.20 each time. No change.

@@ -65,14 +65,20 @@ class StudyResults:
     info: dict[str, Any]
 
 
-def git_state(root: Path) -> str:
-    """Short commit hash, with '+dirty' if there are uncommitted changes; 'no-git' otherwise."""
+def git_state(root: Path, ignore: str = "results") -> str:
+    """Short commit hash, with '+dirty' if anything outside ``ignore`` is uncommitted.
+
+    Called before the run writes anything. Generated output under ``ignore`` does not
+    count: it is rewritten by every run, so it says nothing about the code that ran.
+    Returns 'no-git' outside a repository.
+    """
     try:
         head = subprocess.run(
             ["git", "rev-parse", "--short", "HEAD"], cwd=root, capture_output=True, text=True, check=True
         ).stdout.strip()
         dirty = subprocess.run(
-            ["git", "status", "--porcelain"], cwd=root, capture_output=True, text=True, check=True
+            ["git", "status", "--porcelain", "--", ".", f":(exclude){ignore}"],
+            cwd=root, capture_output=True, text=True, check=True,
         ).stdout.strip()
         return head + ("+dirty" if dirty else "")
     except (OSError, subprocess.CalledProcessError):
@@ -91,6 +97,7 @@ def run_study(
     """Run everything and write results to ``out_dir``. Updates ``readme`` if given."""
     started = time.time()
     run_time = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    commit = git_state(cfg.root, ignore=out_dir.name)
     ev, ct = cfg.evaluation, cfg.contract
     tick, lags, levels = ct.tick_gbp, ev.newey_west_lags, ev.intervals
     headline = ct.base_temp
@@ -135,7 +142,6 @@ def run_study(
     print(f"Holdout: {len(ev.holdout_years)} seasons x {len(hold_variants)} variants")
     holdout = run_walkforward(temps, ev.holdout_years, hold_variants, cfg, bases, "holdout")
     holdout_table = variant_table(holdout, levels, lags, tick)
-    commit = git_state(cfg.root)
     append_log(
         out_dir / "holdout_runs.log",
         f"{run_time} | commit {commit} | data {data_hash[:12]} | frozen "

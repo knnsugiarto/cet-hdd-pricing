@@ -82,3 +82,24 @@ def test_forecast_make_and_score(small_cfg, tmp_path: Path) -> None:
     forecast.score(cfg, late)
     scored = json.loads(late.with_name(late.stem + "_score.json").read_text())
     assert set(scored["methods"]) == {"baseline", "burn", "index", "daily"}
+
+
+def test_git_state_ignores_generated_results(tmp_path: Path) -> None:
+    import subprocess
+
+    from hddlab.pipeline import git_state
+
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    git("init", "-q")
+    git("config", "user.email", "test@example.com")
+    git("config", "user.name", "test")
+    (tmp_path / "code.py").write_text("x = 1\n")
+    git("add", ".")
+    git("commit", "-q", "-m", "init")
+    (tmp_path / "results").mkdir()
+    (tmp_path / "results" / "frozen.json").write_text("{}")
+    assert not git_state(tmp_path).endswith("+dirty")
+    (tmp_path / "code.py").write_text("x = 2\n")
+    assert git_state(tmp_path).endswith("+dirty")
