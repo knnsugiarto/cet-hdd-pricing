@@ -1,6 +1,6 @@
 {
   "rule": "lowest mean development CRPS per family at the headline base temperature (D15)",
-  "selected_at": "2026-10-30 00:56 UTC",
+  "selected_at": "2026-10-30 01:10 UTC",
   "base_temp": 18.0,
   "frozen": {
     "burn": "burn|trend=linear|window=50",

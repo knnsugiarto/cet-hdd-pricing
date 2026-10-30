@@ -1,7 +1,7 @@
 {
   "info": {
-    "run_time": "2026-10-30 00:56 UTC",
-    "commit": "f1ad500+dirty",
+    "run_time": "2026-10-30 01:10 UTC",
+    "commit": "1fd52cc",
     "data": {
       "url": "https://www.metoffice.gov.uk/hadobs/hadcet/data/meantemp_daily_totals.txt",
       "source": "https://www.metoffice.gov.uk/hadobs/hadcet/data/meantemp_daily_totals.txt",
@@ -39,7 +39,7 @@
       2006,
       2025
     ],
-    "elapsed_seconds": 16.4,
+    "elapsed_seconds": 14.4,
     "n_paths": 10000
   },
   "frozen": {
